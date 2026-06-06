@@ -3,107 +3,285 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fuel QR System</title>
+    <title>Fuel QR Registration System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { border-radius: 8px; border: 1px solid #e3e6f0; }
+        .table th { background-color: #1a252f; color: white; text-align: center; }
+        .table td { text-align: center; }
+    </style>
 </head>
-<body class="container mt-4">
-    
-    <div id="alertBox" style="display:none; position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 250px;" class="alert text-center shadow"></div>
+<body>
 
-    <h2 class="mb-4 text-center">Fuel QR Registration System</h2>
-
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card p-3 shadow-sm mb-4">
-                <h5 class="mb-3">Register New Vehicle</h5>
-                <form id="registerForm">
-                    <input type="text" id="regNo" class="form-control mb-2" placeholder="Reg No (e.g. ABC-1234)" required>
-                    <input type="text" id="firstName" class="form-control mb-2" placeholder="First Name" required>
-                    <input type="text" id="lastName" class="form-control mb-2" placeholder="Last Name" required>
-                    <input type="email" id="email" class="form-control mb-2" placeholder="Email" required>
-                    <input type="text" id="station" class="form-control mb-2" placeholder="Nearest Station" required>
-                    <select id="fuelType" class="form-select mb-2">
-                        <option value="Petrol">Petrol</option>
-                        <option value="Diesel">Diesel</option>
-                        <option value="Electric">Electric</option>
-                    </select>
-                    <input type="text" id="nic" class="form-control mb-2" placeholder="Owner NIC" required>
-                    <input type="text" id="model" class="form-control mb-3" placeholder="Vehicle Model (e.g. Toyota Vitz)" required>
-                    <button type="submit" class="btn btn-primary w-100 fw-bold">Register Vehicle</button>
-                </form>
+    <div class="container my-5">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div class="flex-grow-1 text-center">
+                <h2 class="m-0 ps-5">Fuel QR Registration System</h2>
+            </div>
+            <div>
+                <a href="login.html" class="btn btn-danger btn-sm px-3">Logout</a>
             </div>
         </div>
 
-        <div class="col-md-8">
-            <div class="card p-3 mb-3 shadow-sm bg-light">
-                <label class="form-label fw-bold">Search Database:</label>
-                <div class="input-group">
-                    <select id="searchCriteria" class="form-select" style="max-width: 150px;">
-                        <option value="regno">Reg No</option>
-                        <option value="firstname">First Name</option>
-                        <option value="lastname">Last Name</option>
-                        <option value="email">Email</option>
-                        <option value="station">Station</option>
-                        <option value="fuel">Fuel Type</option>
-                        <option value="nic">Owner NIC</option>
-                        <option value="model">Vehicle Model</option> </select>
-                    <input type="text" id="searchInput" class="form-control" placeholder="Enter search term...">
-                    <button class="btn btn-success" id="searchBtn">Search</button>
-                    <button class="btn btn-outline-secondary" id="clearBtn">Clear</button>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card p-4 shadow-sm bg-white">
+                    <h5 class="mb-3" id="formTitle">Register New Vehicle</h5>
+                    <form id="vehicleForm">
+                        <div class="mb-3">
+                            <input type="text" id="regNo" class="form-control" placeholder="Reg No (e.g. ABC-1234)" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="text" id="firstName" class="form-control" placeholder="First Name">
+                        </div>
+                        <div class="mb-3">
+                            <input type="text" id="lastName" class="form-control" placeholder="Last Name">
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" id="vehEmail" class="form-control" placeholder="Email">
+                        </div>
+                        <div class="mb-3">
+                            <input type="text" id="station" class="form-control" placeholder="Nearest Station">
+                        </div>
+                        <div class="mb-3">
+                            <select id="fuelType" class="form-select">
+                                <option value="Petrol">Petrol</option>
+                                <option value="Diesel">Diesel</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <input type="text" id="ownerNIC" class="form-control" placeholder="Owner NIC">
+                        </div>
+                        <div class="mb-3">
+                            <input type="text" id="vehicleModel" class="form-control" placeholder="Vehicle Model (e.g. Toyota Vitz)">
+                        </div>
+                        <button type="submit" id="submitBtn" class="btn btn-primary w-100">Register Vehicle</button>
+                        <button type="button" id="cancelBtn" class="btn btn-secondary w-100 mt-2 d-none" onclick="resetFormState()">Cancel Edit</button>
+                    </form>
                 </div>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="m-0">Registered Vehicles</h5>
-                <button id="loadDataBtn" class="btn btn-sm btn-secondary">Refresh List</button>
+            <div class="col-md-8">
+                <div class="card p-3 mb-4 shadow-sm bg-white">
+                    <label class="form-label fw-bold small mb-2">Search Database:</label>
+                    <div class="input-group">
+                        <select id="searchType" class="form-select" style="max-width: 160px;">
+                            <option value="firstname">First Name</option>
+                            <option value="lastname">Last Name</option>
+                            <option value="regno">Reg No</option>
+                            <option value="email">Email</option>
+                            <option value="station">Station</option>
+                            <option value="fuel">Fuel Type</option>
+                            <option value="nic">Owner NIC</option>
+                        </select>
+                        <input type="text" id="searchQuery" class="form-control" placeholder="Search...">
+                        <button class="btn btn-success px-4" onclick="searchDatabase()">Search</button>
+                        <button class="btn btn-outline-secondary" onclick="fetchVehicles()">Clear</button>
+                    </div>
+                </div>
+
+                <div class="card p-3 shadow-sm bg-white">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="m-0">Registered Vehicles</h5>
+                        <button class="btn btn-secondary btn-sm" id="refreshBtn" onclick="fetchVehicles()">Refresh List</button>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped align-middle small">
+                            <thead>
+                                <tr>
+                                    <th>Reg No</th>
+                                    <th>Owner Name</th>
+                                    <th>Model</th>
+                                    <th>Fuel</th>
+                                    <th>Station</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vehicleTableBody">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://localhost:3000/api/vehicles";
+        let isEditMode = false;
+
+        document.addEventListener("DOMContentLoaded", fetchVehicles);
+
+        // GET all records
+        async function fetchVehicles() {
+            document.getElementById("searchQuery").value = "";
+            try {
+                const res = await fetch(API_BASE);
+                const data = await res.json();
+                renderTable(data);
+            } catch (err) { console.error("Database connection issue:", err); }
+        }
+
+        // Render Database Records inside Table Cells
+        function renderTable(vehicles) {
+            const tbody = document.getElementById("vehicleTableBody");
+            tbody.innerHTML = "";
             
-            <div class="table-responsive shadow-sm">
-                <table class="table table-bordered table-striped table-hover bg-white mb-0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Reg No</th>
-                            <th>Owner Name</th>
-                            <th>Model</th>
-                            <th>Fuel</th>
-                            <th>Station</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="vehicleTableBody">
-                        </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+            const list = Array.isArray(vehicles) ? vehicles : [vehicles];
 
-    <div class="modal fade" id="editModal" tabindex="-1">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Edit Vehicle Record</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <form id="updateForm">
-                <input type="hidden" id="editRegNo">
-                <label class="form-label">Nearest Station</label>
-                <input type="text" id="editStation" class="form-control mb-2" required>
-                <label class="form-label">Fuel Type</label>
-                <select id="editFuelType" class="form-select mb-3">
-                    <option value="Petrol">Petrol</option>
-                    <option value="Diesel">Diesel</option>
-                    <option value="Electric">Electric</option>
-                </select>
-                <button type="submit" class="btn btn-warning w-100 fw-bold">Update Record</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
+            if(list.length === 0 || !list[0]) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-muted text-center py-3">No records found</td></tr>`;
+                return;
+            }
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="app.js"></script>
+            list.forEach(v => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="fw-bold">${v.RegNo}</td>
+                        <td>${v.FirstName || ''} ${v.LastName || ''}</td>
+                        <td>${v.VehicleModel || ''}</td>
+                        <td><span class="badge bg-secondary">${v.FuelType || ''}</span></td>
+                        <td>${v.NearestStation || ''}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm px-2 py-0 me-1" onclick="editVehicle('${v.RegNo}', '${v.FirstName || ''}', '${v.LastName || ''}', '${v.Email || ''}', '${v.NearestStation || ''}', '${v.FuelType}', '${v.OwnerNIC || ''}', '${v.VehicleModel || ''}')">Edit</button>
+                            <button class="btn btn-danger btn-sm px-2 py-0" onclick="deleteVehicle('${v.RegNo}')">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // POST / PUT Save Actions
+        document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            
+            const payload = {
+                RegNo: document.getElementById("regNo").value,
+                FirstName: document.getElementById("firstName").value,
+                LastName: document.getElementById("lastName").value,
+                Email: document.getElementById("vehEmail").value,
+                NearestStation: document.getElementById("station").value,
+                FuelType: document.getElementById("fuelType").value,
+                OwnerNIC: document.getElementById("ownerNIC").value,
+                VehicleModel: document.getElementById("vehicleModel").value
+            };
+
+            const url = isEditMode ? `${API_BASE}/regno/${payload.RegNo}` : API_BASE;
+            const method = isEditMode ? "PUT" : "POST";
+
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                alert(data.message);
+                resetFormState();
+                fetchVehicles();
+            } catch (err) { console.error(err); }
+        });
+
+        // Trigger Edit Configuration State
+        function editVehicle(regNo, first, last, email, station, fuel, nic, model) {
+            isEditMode = true;
+            document.getElementById("formTitle").textContent = "Update Vehicle Info";
+            document.getElementById("regNo").value = regNo;
+            document.getElementById("regNo").setAttribute("disabled", true);
+            document.getElementById("firstName").value = first;
+            document.getElementById("lastName").value = last;
+            document.getElementById("vehEmail").value = email;
+            document.getElementById("station").value = station;
+            document.getElementById("fuelType").value = fuel;
+            document.getElementById("ownerNIC").value = nic;
+            document.getElementById("vehicleModel").value = model;
+            
+            document.getElementById("submitBtn").textContent = "Save Changes";
+            document.getElementById("submitBtn").className = "btn btn-warning w-100";
+            document.getElementById("cancelBtn").classList.remove("d-none");
+        }
+
+        // Delete Request Mapping
+        async function deleteVehicle(regNo) {
+            if (!confirm(`Delete records for ${regNo}?`)) return;
+            try {
+                const res = await fetch(`${API_BASE}/regno/${regNo}`, { method: "DELETE" });
+                const data = await res.json();
+                alert(data.message);
+                fetchVehicles();
+            } catch (err) { console.error(err); }
+        }
+
+        // Active Order-By Search Evaluation Dropdown Core Route Parser
+        async function searchDatabase() {
+            const type = document.getElementById("searchType").value; 
+            const query = document.getElementById("searchQuery").value.trim();
+            if (!query) return fetchVehicles();
+
+            try {
+                const res = await fetch(`${API_BASE}/${type}/${query}`);
+                if (res.status === 404) {
+                    alert("No matching records found.");
+                    return;
+                }
+                const data = await res.json();
+                renderTable(data);
+            } catch (err) { console.error(err); }
+        }
+
+        // Form Normalization
+        function resetFormState() {
+            isEditMode = false;
+            document.getElementById("vehicleForm").reset();
+            document.getElementById("formTitle").textContent = "Register New Vehicle";
+            document.getElementById("regNo").removeAttribute("disabled");
+            document.getElementById("submitBtn").textContent = "Register Vehicle";
+            document.getElementById("submitBtn").className = "btn btn-primary w-100";
+            document.getElementById("cancelBtn").classList.add("d-none");
+        }
+
+
+
+
+        // Post / Update controller
+document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    
+    const regNoValue = document.getElementById("regNo").value.trim().toUpperCase();
+
+    const payload = {
+        RegNo: regNoValue,
+        FirstName: document.getElementById("firstName").value,
+        LastName: document.getElementById("lastName").value,
+        Email: document.getElementById("vehEmail").value,
+        NearestStation: document.getElementById("station").value,
+        FuelType: document.getElementById("fuelType").value,
+        OwnerNIC: document.getElementById("ownerNIC").value,
+        VehicleModel: document.getElementById("vehicleModel").value,
+        // AUTOMATIC GENERATION: Creates the QR tracking token string automatically
+        QRCode: `FUEL-QR-${regNoValue}` 
+    };
+
+    const url = isEditMode ? `${API_BASE}/regno/${payload.RegNo}` : API_BASE;
+    const method = isEditMode ? "PUT" : "POST";
+
+    try {
+        const res = await fetch(url, {
+            method: method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        alert("Vehicle Processed & QR Payload Generated Successfully!");
+        resetFormState();
+        fetchVehicles();
+    } catch (err) { console.error(err); }
+});
+
+
+
+    </script>
 </body>
 </html>

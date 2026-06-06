@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Fuel QR Registration System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .login-card { max-width: 400px; width: 100%; border: none; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="card login-card shadow p-4 bg-white">
+        <h2 class="text-center mb-4">Login</h2>
+        
+        <div id="alertBox" class="alert d-none small py-2 text-center" role="alert"></div>
+
+        <form id="loginForm">
+            <div class="mb-3">
+                <label for="email" class="form-label small fw-bold">Email address</label>
+                <input type="email" id="email" class="form-control" placeholder="Enter your email" required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label small fw-bold">Password</label>
+                <input type="password" id="password" class="form-control" placeholder="Enter your password" required>
+            </div>
+            <button type="submit" class="btn btn-success w-100 mb-3">Login</button>
+        </form>
+
+        <div class="text-center small">
+            <span class="text-muted">Don't have an account?</span> 
+            <a href="register.html" class="text-decoration-none text-primary fw-bold">Register here</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            // 1. CRITICAL FIX: Stops the browser from refreshing the page immediately on submit
+            e.preventDefault(); 
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const alertBox = document.getElementById('alertBox');
+
+            // Hide previous alerts
+            alertBox.classList.add('d-none');
+
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Show Success
+                    alertBox.className = "alert alert-success py-2 small text-center";
+                    alertBox.textContent = data.message;
+                    alertBox.classList.remove('d-none');
+                    
+                    // Save the user session token inside the browser local memory
+                    localStorage.setItem("loggedInEmail", email); 
+                    
+                    // 2. Redirect strictly to what the backend tells us
+                    setTimeout(() => { 
+                        window.location.href = data.redirectTo; 
+                    }, 800);
+                } else {
+                    // Show Error (Invalid details)
+                    alertBox.className = "alert alert-danger py-2 small text-center";
+                    alertBox.textContent = data.message || "Invalid Email or Password";
+                    alertBox.classList.remove('d-none');
+                }
+            } catch (err) {
+                console.error("Backend login request failed:", err);
+                alertBox.className = "alert alert-danger py-2 small text-center";
+                alertBox.textContent = "Error connecting to backend server.";
+                alertBox.classList.remove('d-none');
+            }
+        });
+    </script>
+</body>
+</html>
