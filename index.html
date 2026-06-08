@@ -14,39 +14,13 @@
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
-        <div class="container">
-            <a class="navbar-brand fw-bold d-flex align-items-center" href="#">
-                <span class="badge bg-primary me-2">QR</span> Fuel Portal
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="#">Dashboard</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Fuel Type</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Quota</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Stations</a>
-                    </li>
-                </ul>
-                <div class="d-flex">
-                    <a href="login.html" class="btn btn-outline-danger btn-sm px-3">Logout</a>
-                </div>
-            </div>
-        </div>
-    </nav>
     <div class="container my-5">
         <div class="d-flex justify-content-between align-items-center mb-5">
             <div class="flex-grow-1 text-center">
-                <h2 class="m-0 fw-bold text-secondary">Fuel QR Registration System</h2>
+                <h2 class="m-0 ps-5">Fuel QR Registration System</h2>
+            </div>
+            <div>
+                <a href="login.html" class="btn btn-danger btn-sm px-3">Logout</a>
             </div>
         </div>
 
@@ -75,9 +49,6 @@
                                 <option value="Petrol">Petrol</option>
                                 <option value="Diesel">Diesel</option>
                             </select>
-                        </div>
-                        <div class="mb-3">
-                            <input type="number" id="quota" class="form-control" placeholder="Weekly Quota (e.g. 20L)" min="1">
                         </div>
                         <div class="mb-3">
                             <input type="text" id="ownerNIC" class="form-control" placeholder="Owner NIC">
@@ -129,13 +100,131 @@
                                 </tr>
                             </thead>
                             <tbody id="vehicleTableBody">
-                            </tbody>
+                                </tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- .............................................................
+         @ COPYRIGHT - MANUSHAN
+         Admin Quota Dashboard Section
+        
+         integrated into the main registration system by Manushan.
+         ........................................................... -->
+
+
+    <style>
+        /* Admin quota table section */
+        #adminSection .card-header { background: #1a1a2e; color: #fff; }
+        #adminSection .badge-remaining { font-size: 0.82rem; }
+        #adminSection #last-updated { font-size: 0.75rem; color: #888; }
+        #adminSection .table th { background-color: #1a1a2e; color: white; text-align: center; }
+        #adminSection .table td { text-align: center; vertical-align: middle; }
+        #adminSection table { font-size: 0.82rem; }
+    </style>
+
+  
+    <div class="container mb-5" id="adminSection">
+        <hr class="my-4">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>⛽ Fuel Quota</strong>
+                <div class="d-flex align-items-center gap-3">
+                    <span id="last-updated" style="font-size:0.75rem;color:#aaa;">Loading...</span>
+                    <span class="badge bg-success" id="live-badge" style="font-size:0.75rem;">🔄</span>
+                    <button class="btn btn-success btn-sm px-3" onclick="openAddQuotaModal('', '')">
+                        ＋ Add Vehicle Quota
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-bordered table-hover mb-0" id="quota-table">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Registration Number</th>
+                            <th>Nearest Fuel Station</th>
+                            <th>Max Quota (L)</th>
+                            <th>Used (L)</th>
+                            <th>Remaining (L)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="quota-body">
+                        <tr><td colspan="5" class="text-center py-3">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ................................................................
+         @ COPYRIGHT - MANUSHAN
+         Add Vehicle Quota Modal
+         POSTs to separate Quota MongoDB (i use atlas Don't worry  )
+         ............................................................ -->
+    <div class="modal fade" id="addQuotaModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header py-2" style="background:#1a252f;">
+                    <h6 class="modal-title text-white">Add Vehicle Quota</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body py-3 px-3">
+                    <div class="mb-2">
+                        <label class="form-label small mb-1 fw-bold">Registration No</label>
+                        <input type="text" id="quota-reg-input" class="form-control form-control-sm fw-bold" placeholder="e.g. ABC-1234">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small mb-1 fw-bold">Nearest Fuel Station</label>
+                        <input type="text" id="quota-station-input" class="form-control form-control-sm" placeholder="Nearest Station">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small mb-1 fw-bold">Quota Limit (L)</label>
+                        <input type="number" id="quota-limit-input" class="form-control form-control-sm" placeholder="e.g. 40" min="1">
+                    </div>
+                    <div id="quota-add-error" class="text-danger small mt-1 d-none"></div>
+                    <div id="quota-add-success" class="text-success small mt-1 d-none"></div>
+                </div>
+                <div class="modal-footer py-2">
+                    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-success btn-sm" id="submit-quota-btn">✔ Submit Quota</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- END Add Quota Modal (@ COPYRIGHT - MANUSHAN).................................... -->
+
+    <!-- Edit Quota Modal (@ COPYRIGHT - MANUSHAN) .......................... -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title">Update Quota Limit</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">Vehicle: <strong id="modal-reg"></strong></p>
+                    <input type="number" id="modal-quota-input" class="form-control" placeholder="New max quota (L)" min="1">
+                    <div id="modal-error" class="text-danger mt-2 d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary btn-sm" id="save-quota-btn">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- END Quota Section (@ COPYRIGHT - MANUSHAN) .............-->
+	
+	
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery  -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
     <script>
         const API_BASE = "http://localhost:3000/api/vehicles";  // local Mongo DB .
@@ -175,15 +264,47 @@
                         <td>${v.NearestStation || ''}</td>
                         <td>
                             <button class="btn btn-warning btn-sm px-2 py-0 me-1" onclick="editVehicle('${v.RegNo}', '${v.FirstName || ''}', '${v.LastName || ''}', '${v.Email || ''}', '${v.NearestStation || ''}', '${v.FuelType}', '${v.OwnerNIC || ''}', '${v.VehicleModel || ''}')">Edit</button>
-                            <button class="btn btn-danger btn-sm px-2 py-0" onclick="deleteVehicle('${v.RegNo}')">Delete</button>
+                            <button class="btn btn-danger btn-sm px-2 py-0 me-1" onclick="deleteVehicle('${v.RegNo}')">Delete</button>
+                            <button class="btn btn-success btn-sm px-2 py-0" onclick="openAddQuotaModal('${v.RegNo}', '${v.NearestStation || ''}')">+ Quota</button>
                         </td>
                     </tr>
                 `;
             });
         }
 
+        // POST / PUT Save Actions
+        document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            
+            const payload = {
+                RegNo: document.getElementById("regNo").value,
+                FirstName: document.getElementById("firstName").value,
+                LastName: document.getElementById("lastName").value,
+                Email: document.getElementById("vehEmail").value,
+                NearestStation: document.getElementById("station").value,
+                FuelType: document.getElementById("fuelType").value,
+                OwnerNIC: document.getElementById("ownerNIC").value,
+                VehicleModel: document.getElementById("vehicleModel").value
+            };
+
+            const url = isEditMode ? `${API_BASE}/regno/${payload.RegNo}` : API_BASE;
+            const method = isEditMode ? "PUT" : "POST";
+
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                alert(data.message);
+                resetFormState();
+                fetchVehicles();
+            } catch (err) { console.error(err); }
+        });
+
         // Trigger Edit Configuration State
-        function editVehicle(regNo, first, last, email, station, fuel, nic, model, quota) {
+        function editVehicle(regNo, first, last, email, station, fuel, nic, model) {
             isEditMode = true;
             document.getElementById("formTitle").textContent = "Update Vehicle Info";
             document.getElementById("regNo").value = regNo;
@@ -193,7 +314,6 @@
             document.getElementById("vehEmail").value = email;
             document.getElementById("station").value = station;
             document.getElementById("fuelType").value = fuel;
-            document.getElementById("quota").value = quota; // Assigned Edit value mapping
             document.getElementById("ownerNIC").value = nic;
             document.getElementById("vehicleModel").value = model;
             
@@ -241,40 +361,46 @@
             document.getElementById("cancelBtn").classList.add("d-none");
         }
 
+
+
+
         // Post / Update controller
-        document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            
-            const regNoValue = document.getElementById("regNo").value.trim().toUpperCase();
+document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    
+    const regNoValue = document.getElementById("regNo").value.trim().toUpperCase();
 
-            const payload = {
-                RegNo: regNoValue,
-                FirstName: document.getElementById("firstName").value,
-                LastName: document.getElementById("lastName").value,
-                Email: document.getElementById("vehEmail").value,
-                NearestStation: document.getElementById("station").value,
-                FuelType: document.getElementById("fuelType").value,
-                Quota: document.getElementById("quota").value, // Appended Quota parameter capture mapping
-                OwnerNIC: document.getElementById("ownerNIC").value,
-                VehicleModel: document.getElementById("vehicleModel").value,
-                QRCode: `FUEL-QR-${regNoValue}` 
-            };
+    const payload = {
+        RegNo: regNoValue,
+        FirstName: document.getElementById("firstName").value,
+        LastName: document.getElementById("lastName").value,
+        Email: document.getElementById("vehEmail").value,
+        NearestStation: document.getElementById("station").value,
+        FuelType: document.getElementById("fuelType").value,
+        OwnerNIC: document.getElementById("ownerNIC").value,
+        VehicleModel: document.getElementById("vehicleModel").value,
+        // AUTOMATIC GENERATION: Creates the QR tracking token string automatically
+        QRCode: `FUEL-QR-${regNoValue}` 
+    };
 
-            const url = isEditMode ? `${API_BASE}/regno/${payload.RegNo}` : API_BASE;
-            const method = isEditMode ? "PUT" : "POST";
+    const url = isEditMode ? `${API_BASE}/regno/${payload.RegNo}` : API_BASE;
+    const method = isEditMode ? "PUT" : "POST";
 
-            try {
-                const res = await fetch(url, {
-                    method: method,
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                alert("Vehicle Processed & QR Payload Generated Successfully!");
-                resetFormState();
-                fetchVehicles();
-            } catch (err) { console.error(err); }
+    try {
+        const res = await fetch(url, {
+            method: method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
         });
+        const data = await res.json();
+        alert("Vehicle Processed & QR Payload Generated Successfully!");
+        resetFormState();
+        fetchVehicles();
+    } catch (err) { console.error(err); }
+});
+
+
+
     </script>
 
     <!-- ........................................................
