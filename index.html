@@ -108,8 +108,126 @@
         </div>
     </div>
 
+    <!-- .............................................................
+         @ COPYRIGHT - MANUSHAN
+         Admin Quota Dashboard Section
+        
+         integrated into the main registration system by Manushan.
+         ........................................................... -->
+
+
+    <style>
+        /* Admin quota table section */
+        #adminSection .card-header { background: #1a1a2e; color: #fff; }
+        #adminSection .badge-remaining { font-size: 0.82rem; }
+        #adminSection #last-updated { font-size: 0.75rem; color: #888; }
+        #adminSection .table th { background-color: #1a1a2e; color: white; text-align: center; }
+        #adminSection .table td { text-align: center; vertical-align: middle; }
+        #adminSection table { font-size: 0.82rem; }
+    </style>
+
+  
+    <div class="container mb-5" id="adminSection">
+        <hr class="my-4">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>⛽ Fuel Quota</strong>
+                <div class="d-flex align-items-center gap-3">
+                    <span id="last-updated" style="font-size:0.75rem;color:#aaa;">Loading...</span>
+                    <span class="badge bg-success" id="live-badge" style="font-size:0.75rem;">🔄</span>
+                    <button class="btn btn-success btn-sm px-3" onclick="openAddQuotaModal('', '')">
+                        ＋ Add Vehicle Quota
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-bordered table-hover mb-0" id="quota-table">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Registration Number</th>
+                            <th>Nearest Fuel Station</th>
+                            <th>Max Quota (L)</th>
+                            <th>Used (L)</th>
+                            <th>Remaining (L)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="quota-body">
+                        <tr><td colspan="5" class="text-center py-3">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ................................................................
+         @ COPYRIGHT - MANUSHAN
+         Add Vehicle Quota Modal
+         POSTs to separate Quota MongoDB (i use atlas Don't worry  )
+         ............................................................ -->
+    <div class="modal fade" id="addQuotaModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header py-2" style="background:#1a252f;">
+                    <h6 class="modal-title text-white">Add Vehicle Quota</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body py-3 px-3">
+                    <div class="mb-2">
+                        <label class="form-label small mb-1 fw-bold">Registration No</label>
+                        <input type="text" id="quota-reg-input" class="form-control form-control-sm fw-bold" placeholder="e.g. ABC-1234">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small mb-1 fw-bold">Nearest Fuel Station</label>
+                        <input type="text" id="quota-station-input" class="form-control form-control-sm" placeholder="Nearest Station">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small mb-1 fw-bold">Quota Limit (L)</label>
+                        <input type="number" id="quota-limit-input" class="form-control form-control-sm" placeholder="e.g. 40" min="1">
+                    </div>
+                    <div id="quota-add-error" class="text-danger small mt-1 d-none"></div>
+                    <div id="quota-add-success" class="text-success small mt-1 d-none"></div>
+                </div>
+                <div class="modal-footer py-2">
+                    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-success btn-sm" id="submit-quota-btn">✔ Submit Quota</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- END Add Quota Modal (@ COPYRIGHT - MANUSHAN).................................... -->
+
+    <!-- Edit Quota Modal (@ COPYRIGHT - MANUSHAN) .......................... -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title">Update Quota Limit</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">Vehicle: <strong id="modal-reg"></strong></p>
+                    <input type="number" id="modal-quota-input" class="form-control" placeholder="New max quota (L)" min="1">
+                    <div id="modal-error" class="text-danger mt-2 d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary btn-sm" id="save-quota-btn">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- END Quota Section (@ COPYRIGHT - MANUSHAN) .............-->
+	
+	
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery  -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
     <script>
-        const API_BASE = "http://localhost:3000/api/vehicles";
+        const API_BASE = "http://localhost:3000/api/vehicles";  // local Mongo DB .
         let isEditMode = false;
 
         document.addEventListener("DOMContentLoaded", fetchVehicles);
@@ -146,7 +264,8 @@
                         <td>${v.NearestStation || ''}</td>
                         <td>
                             <button class="btn btn-warning btn-sm px-2 py-0 me-1" onclick="editVehicle('${v.RegNo}', '${v.FirstName || ''}', '${v.LastName || ''}', '${v.Email || ''}', '${v.NearestStation || ''}', '${v.FuelType}', '${v.OwnerNIC || ''}', '${v.VehicleModel || ''}')">Edit</button>
-                            <button class="btn btn-danger btn-sm px-2 py-0" onclick="deleteVehicle('${v.RegNo}')">Delete</button>
+                            <button class="btn btn-danger btn-sm px-2 py-0 me-1" onclick="deleteVehicle('${v.RegNo}')">Delete</button>
+                            <button class="btn btn-success btn-sm px-2 py-0" onclick="openAddQuotaModal('${v.RegNo}', '${v.NearestStation || ''}')">+ Quota</button>
                         </td>
                     </tr>
                 `;
@@ -283,5 +402,160 @@ document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
 
 
     </script>
+
+    <!-- ........................................................
+         @ COPYRIGHT - MANUSHAN
+         Quota Dashboard  
+         ...................................................... -->
+    <script>
+        // Admin Quota API endpoint 
+        const QUOTA_API = '#'; //api update soon Dont'worry suckers
+        let editId = null;
+        const editModal = new bootstrap.Modal('#editModal');
+
+        // Load quota records from backend
+        function loadQuotas() {
+            $.ajax({
+                url: QUOTA_API + '/quotas',
+                method: 'GET',
+                success: function(data) {
+                    const tbody = $('#quota-body');
+                    tbody.empty();
+                    if (data.length === 0) {
+                        tbody.append('<tr><td colspan="6" class="text-center">No records found</td></tr>');
+                        return;
+                    }
+                    data.forEach(function(v) {
+                        const remaining = v.max_quota - v.used;
+                        const badgeClass = remaining === 0 ? 'bg-danger' : remaining < 5 ? 'bg-warning text-dark' : 'bg-success';
+                        tbody.append(`
+                            <tr>
+                                <td><strong>${v.reg_number}</strong></td>
+                                <td>${v.nearest_station || '<span class="text-muted">—</span>'}</td>
+                                <td>${v.max_quota} L</td>
+                                <td>${v.used} L</td>
+                                <td><span class="badge ${badgeClass} badge-remaining">${remaining.toFixed(1)} L</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary edit-btn"
+                                        data-id="${v._id}"
+                                        data-reg="${v.reg_number}"
+                                        data-quota="${v.max_quota}">
+                                        Edit Quota
+                                    </button>
+                                </td>
+                            </tr>
+                        `);
+                    });
+                    $('#last-updated').text('Last updated: ' + new Date().toLocaleTimeString());
+                },
+                error: function() {
+                    $('#quota-body').html('<tr><td colspan="6" class="text-danger text-center">Failed to load data. Is the server running?</td></tr>');
+                }
+            });
+        }
+
+        // Open edit modal on Edit Quota click
+        $(document).on('click', '.edit-btn', function() {
+            editId = $(this).data('id');
+            $('#modal-reg').text($(this).data('reg'));
+            $('#modal-quota-input').val($(this).data('quota'));
+            $('#modal-error').addClass('d-none').text('');
+            editModal.show();
+        });
+
+        // Save updated quota value
+        $('#save-quota-btn').on('click', function() {
+            const newQuota = parseInt($('#modal-quota-input').val());
+            if (!newQuota || newQuota < 1) {
+                $('#modal-error').removeClass('d-none').text('Please enter a valid quota value.');
+                return;
+            }
+            $.ajax({
+                url: QUOTA_API + '/quotas/' + editId,
+                method: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({ max_quota: newQuota }),
+                success: function() {
+                    editModal.hide();
+                    loadQuotas();
+                },
+                error: function() {
+                    $('#modal-error').removeClass('d-none').text('Update failed. Try again.');
+                }
+            });
+        });
+
+        // Open Add Quota Modal
+        
+       
+        function openAddQuotaModal(regNo, station) {
+            const regInput     = document.getElementById('quota-reg-input');
+            const stationInput = document.getElementById('quota-station-input');
+
+            regInput.value     = regNo || '';
+            stationInput.value = station || '';
+            document.getElementById('quota-limit-input').value = '';
+            document.getElementById('quota-add-error').classList.add('d-none');
+            document.getElementById('quota-add-success').classList.add('d-none');
+
+            if (regNo) {
+                // Called from vehicle row 
+                regInput.setAttribute('readonly', true);
+                regInput.classList.add('bg-light');
+                stationInput.setAttribute('readonly', true);
+                stationInput.classList.add('bg-light');
+            } else {
+                // Called from dashboard header 
+                regInput.removeAttribute('readonly');
+                regInput.classList.remove('bg-light');
+                stationInput.removeAttribute('readonly');
+                stationInput.classList.remove('bg-light');
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('addQuotaModal'));
+            modal.show();
+        }
+
+        // Submit new quota to QUOTA_API 
+        document.getElementById('submit-quota-btn').addEventListener('click', function() {
+            const regNo = document.getElementById('quota-reg-input').value.trim();
+            const station = document.getElementById('quota-station-input').value.trim();
+            const limit = parseInt(document.getElementById('quota-limit-input').value);
+            const errEl = document.getElementById('quota-add-error');
+            const sucEl = document.getElementById('quota-add-success');
+
+            errEl.classList.add('d-none');
+            sucEl.classList.add('d-none');
+
+            if (!regNo) { errEl.textContent = 'Registration number is missing.'; errEl.classList.remove('d-none'); return; }
+            if (!limit || limit < 1) { errEl.textContent = 'Please enter a valid quota limit.'; errEl.classList.remove('d-none'); return; }
+
+            $.ajax({
+                url: QUOTA_API + '/quotas',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ reg_number: regNo, nearest_station: station, max_quota: limit, used: 0 }),
+                success: function() {
+                    sucEl.textContent = '✔ Quota added successfully!';
+                    sucEl.classList.remove('d-none');
+                    setTimeout(function() {
+                        bootstrap.Modal.getInstance(document.getElementById('addQuotaModal')).hide();
+                        loadQuotas();
+                    }, 1200);
+                },
+                error: function(xhr) {
+                    const msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Failed to add quota. Try again.';
+                    errEl.textContent = msg;
+                    errEl.classList.remove('d-none');
+                }
+            });
+        });
+
+        // Load immediately, then auto-refresh every 3 seconds (live updates)
+        loadQuotas();
+        setInterval(loadQuotas, 3000);
+    </script>
+    <!-- END Admin Quota JS (@ COPYRIGHT - MANUSHAN)................................................. -->
+
 </body>
 </html>
