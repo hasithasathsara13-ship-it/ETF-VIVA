@@ -7,7 +7,7 @@ const cors = require('cors');
 const app = express();
 
 // CORS — must come before routes. The explicit OPTIONS handler
-// fixes preflight failures on POST/PUT (common cause of "POST not working").
+
 app.use(cors());
 app.options('*', cors());
 
@@ -28,7 +28,7 @@ MongoClient.connect(MONGO_URI)
     db = client.db(DB_NAME);
     console.log('✅ Connected to MongoDB Atlas');
 
-    // Seed sample data if empty
+    
     const count = await db.collection('quotas').countDocuments();
     if (count === 0) {
       await db.collection('quotas').insertMany([
@@ -41,7 +41,7 @@ MongoClient.connect(MONGO_URI)
   })
   .catch((err) => console.error('❌ MongoDB connection error:', err));
 
-// Small helper so every route fails loudly, not silently
+
 function requireDb(res) {
   if (!db) {
     res.status(503).json({ message: 'Database not connected yet. Try again in a moment.' });
@@ -50,9 +50,9 @@ function requireDb(res) {
   return true;
 }
 
-// ---------------------------------------------------------------------------
+
 // QUOTAS
-// ---------------------------------------------------------------------------
+
 
 // GET all quotas
 app.get('/api/quotas', async (req, res) => {
@@ -133,6 +133,24 @@ app.put('/api/quotas/:id', async (req, res) => {
   }
 });
 
+// DELETE a quota record
+app.delete('/api/quotas/:id', async (req, res) => {
+  if (!requireDb(res)) return;
+  try {
+    if (!ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid quota ID.' });
+    }
+    const result = await db.collection('quotas').deleteOne({ _id: new ObjectId(req.params.id) });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: 'Quota record not found.' });
+    }
+    res.json({ message: 'Quota deleted successfully.' });
+  } catch (err) {
+    console.error('DELETE /api/quotas/:id failed:', err);
+    res.status(500).json({ message: 'Server error while deleting quota.' });
+  }
+});
+
 // ---------------------------------------------------------------------------
 // ORDERS
 // ---------------------------------------------------------------------------
@@ -199,4 +217,4 @@ app.post('/api/orders', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
