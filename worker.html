@@ -125,14 +125,14 @@
       contentType: 'application/json',
       data: JSON.stringify({ reg_number: reg, requested_liters: Number(liters) }),
       success: function(data) {
-        showAlert('✅ Fuel issued: ' + data.requested_liters + 'L for ' + data.reg_number, 'success');
+        showAlert('Fuel issued: ' + data.requested_liters + 'L for ' + data.reg_number, 'success');
         $('#reg-input').val('');
         $('#liters-input').val('');
         loadOrders();
       },
       error: function(xhr) {
         const msg = xhr.responseJSON ? xhr.responseJSON.error : 'Request failed.';
-        showAlert('❌ ' + msg, 'danger');
+        showAlert('Error ' + msg, 'danger');
       },
       complete: function() {
         $('#submit-btn').prop('disabled', false).text('Submit Fuel Request');
