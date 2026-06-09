@@ -34,10 +34,13 @@
                         <a class="nav-link" href="fuel-types.html">Fuel Type</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="vehicletypes.html">Vehicle Type</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="#">Quota</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Stations</a>
+                        <a class="nav-link" href="station/station-management.html">Stations</a>
                     </li>
                 </ul>
                 <div class="d-flex">
@@ -73,7 +76,9 @@
                             <input type="email" id="vehEmail" class="form-control" placeholder="Email">
                         </div>
                         <div class="mb-3">
-                            <input type="text" id="station" class="form-control" placeholder="Nearest Station">
+                            <select id="station" class="form-select">
+                                <option value="" disabled selected>Loading stations...</option>
+                            </select>
                         </div>
                         <div class="mb-3">
                             <select id="fuelType" class="form-select">
@@ -82,6 +87,11 @@
                         </div>
                         <div class="mb-3">
                             <input type="text" id="ownerNIC" class="form-control" placeholder="Owner NIC">
+                        </div>
+                        <div class="mb-3">
+                            <select id="vehicleType" class="form-select">
+                                <option value="" disabled selected>Loading vehicle types...</option>
+                            </select>
                         </div>
                         <div class="mb-3">
                             <input type="text" id="vehicleModel" class="form-control" placeholder="Vehicle Model (e.g. Toyota Vitz)">
@@ -124,6 +134,7 @@
                                     <th>Reg No</th>
                                     <th>Owner Name</th>
                                     <th>Model</th>
+                                    <th>Vehicle Type</th>
                                     <th>Fuel</th>
                                     <th>Station</th>
                                     <th>Actions</th>
@@ -246,7 +257,7 @@
     </div>
     <!-- END Quota Section (@ COPYRIGHT - MANUSHAN) .............-->
 	
-	// me thiyenne ube code eka
+	
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -260,6 +271,8 @@
         document.addEventListener("DOMContentLoaded", () => {
             fetchVehicles();
             loadFuelTypeOptions();
+            loadStationOptions();
+            loadVehicleTypeOptions();
         });
 
         // Populate the Fuel Type dropdown from the fuel-types API
@@ -283,11 +296,66 @@
                     select.appendChild(opt);
                 });
 
-                // Keep the previously selected value when entering edit mode
                 if (selectedValue) select.value = selectedValue;
             } catch (err) {
                 console.error('Failed to load fuel types:', err);
                 document.getElementById('fuelType').innerHTML = '<option value="" disabled selected>Failed to load</option>';
+            }
+        }
+
+        // Populate the Nearest Station dropdown from the stations API
+        async function loadStationOptions(selectedValue = null) {
+            try {
+                const res = await fetch('http://localhost:3000/api/stations');
+                const data = await res.json();
+                const select = document.getElementById('station');
+                select.innerHTML = '';
+
+                if (!data || data.length === 0) {
+                    select.innerHTML = '<option value="" disabled selected>No stations available</option>';
+                    return;
+                }
+
+                data.forEach(st => {
+                    const opt = document.createElement('option');
+                    opt.value = st.name;
+                    opt.textContent = st.name;
+                    if (selectedValue && st.name === selectedValue) opt.selected = true;
+                    select.appendChild(opt);
+                });
+
+                if (selectedValue) select.value = selectedValue;
+            } catch (err) {
+                console.error('Failed to load stations:', err);
+                document.getElementById('station').innerHTML = '<option value="" disabled selected>Failed to load</option>';
+            }
+        }
+
+        // Populate the Vehicle Type dropdown from the vehicle-types API
+        async function loadVehicleTypeOptions(selectedValue = null) {
+            try {
+                const res = await fetch('http://localhost:3000/api/vehicle-types');
+                const data = await res.json();
+                const select = document.getElementById('vehicleType');
+                select.innerHTML = '';
+
+                if (!data || data.length === 0) {
+                    select.innerHTML = '<option value="" disabled selected>No vehicle types available</option>';
+                    return;
+                }
+
+                data.forEach(vt => {
+                    const opt = document.createElement('option');
+                    opt.value = vt.name;
+                    opt.textContent = vt.name;
+                    if (selectedValue && vt.name === selectedValue) opt.selected = true;
+                    select.appendChild(opt);
+                });
+
+                if (selectedValue) select.value = selectedValue;
+            } catch (err) {
+                console.error('Failed to load vehicle types:', err);
+                document.getElementById('vehicleType').innerHTML = '<option value="" disabled selected>Failed to load</option>';
             }
         }
 
@@ -309,7 +377,7 @@
             const list = Array.isArray(vehicles) ? vehicles : [vehicles];
 
             if(list.length === 0 || !list[0]) {
-                tbody.innerHTML = `<tr><td colspan="6" class="text-muted text-center py-3">No records found</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="text-muted text-center py-3">No records found</td></tr>`;
                 return;
             }
 
@@ -319,10 +387,11 @@
                         <td class="fw-bold">${v.RegNo}</td>
                         <td>${v.FirstName || ''} ${v.LastName || ''}</td>
                         <td>${v.VehicleModel || ''}</td>
+                        <td><span class="badge bg-success">${v.VehicleType || ''}</span></td>
                         <td><span class="badge bg-secondary">${v.FuelType || ''}</span></td>
                         <td>${v.NearestStation || ''}</td>
                         <td>
-                            <button class="btn btn-warning btn-sm px-2 py-0 me-1" onclick="editVehicle('${v.RegNo}', '${v.FirstName || ''}', '${v.LastName || ''}', '${v.Email || ''}', '${v.NearestStation || ''}', '${v.FuelType}', '${v.OwnerNIC || ''}', '${v.VehicleModel || ''}')">Edit</button>
+                            <button class="btn btn-warning btn-sm px-2 py-0 me-1" onclick="editVehicle('${v.RegNo}', '${v.FirstName || ''}', '${v.LastName || ''}', '${v.Email || ''}', '${v.NearestStation || ''}', '${v.FuelType || ''}', '${v.OwnerNIC || ''}', '${v.VehicleType || ''}', '${v.VehicleModel || ''}')">Edit</button>
                             <button class="btn btn-danger btn-sm px-2 py-0 me-1" onclick="deleteVehicle('${v.RegNo}')">Delete</button>
                             <button class="btn btn-success btn-sm px-2 py-0" onclick="openAddQuotaModal('${v.RegNo}', '${v.NearestStation || ''}')">+ Quota</button>
                         </td>
@@ -343,6 +412,7 @@
                 NearestStation: document.getElementById("station").value,
                 FuelType: document.getElementById("fuelType").value,
                 OwnerNIC: document.getElementById("ownerNIC").value,
+                VehicleType: document.getElementById("vehicleType").value,
                 VehicleModel: document.getElementById("vehicleModel").value
             };
 
@@ -363,7 +433,7 @@
         });
 
         // Trigger Edit Configuration State
-        function editVehicle(regNo, first, last, email, station, fuel, nic, model) {
+        function editVehicle(regNo, first, last, email, station, fuel, nic, vtype, model) {
             isEditMode = true;
             document.getElementById("formTitle").textContent = "Update Vehicle Info";
             document.getElementById("regNo").value = regNo;
@@ -371,11 +441,12 @@
             document.getElementById("firstName").value = first;
             document.getElementById("lastName").value = last;
             document.getElementById("vehEmail").value = email;
-            document.getElementById("station").value = station;
-            loadFuelTypeOptions(fuel);  // reload dropdown and pre-select the current fuel type
+            loadStationOptions(station);
+            loadFuelTypeOptions(fuel);
             document.getElementById("ownerNIC").value = nic;
+            loadVehicleTypeOptions(vtype);
             document.getElementById("vehicleModel").value = model;
-            
+
             document.getElementById("submitBtn").textContent = "Save Changes";
             document.getElementById("submitBtn").className = "btn btn-warning w-100";
             document.getElementById("cancelBtn").classList.remove("d-none");
@@ -418,6 +489,9 @@
             document.getElementById("submitBtn").textContent = "Register Vehicle";
             document.getElementById("submitBtn").className = "btn btn-primary w-100";
             document.getElementById("cancelBtn").classList.add("d-none");
+            loadFuelTypeOptions();
+            loadStationOptions();
+            loadVehicleTypeOptions();
         }
 
 
@@ -437,6 +511,7 @@ document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
         NearestStation: document.getElementById("station").value,
         FuelType: document.getElementById("fuelType").value,
         OwnerNIC: document.getElementById("ownerNIC").value,
+        VehicleType: document.getElementById("vehicleType").value,
         VehicleModel: document.getElementById("vehicleModel").value,
         // AUTOMATIC GENERATION: Creates the QR tracking token string automatically
         QRCode: `FUEL-QR-${regNoValue}` 

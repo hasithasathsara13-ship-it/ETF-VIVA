@@ -24,6 +24,24 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 
 // ==========================================
+// VEHICLE TYPE DATABASE COLLECTION SCHEMA
+// ==========================================
+const vehicleTypeSchema = new mongoose.Schema({
+    name: { type: String, required: true, unique: true, trim: true }
+}, { timestamps: true });
+const VehicleType = mongoose.model('VehicleType', vehicleTypeSchema);
+
+// ==========================================
+// STATION DATABASE COLLECTION SCHEMA
+// ==========================================
+const stationSchema = new mongoose.Schema({
+    name:     { type: String, required: true, unique: true, trim: true },
+    location: { type: String, trim: true },
+    contact:  { type: String, trim: true }
+}, { timestamps: true });
+const Station = mongoose.model('Station', stationSchema);
+
+// ==========================================
 // FUEL TYPE DATABASE COLLECTION SCHEMA
 // ==========================================
 const fuelTypeSchema = new mongoose.Schema({
@@ -42,10 +60,88 @@ const vehicleSchema = new mongoose.Schema({
     NearestStation: String,
     FuelType: String,
     OwnerNIC: String,
+    VehicleType: String,
     VehicleModel: String,
     QRCode: String
 });
 const Vehicle = mongoose.model('Vehicle', vehicleSchema);
+
+// ==========================================
+// VEHICLE TYPE ROUTES
+// ==========================================
+
+// --- Get all vehicle types ---
+app.get('/api/vehicle-types', async (req, res) => {
+    try {
+        const types = await VehicleType.find().sort({ createdAt: 1 });
+        res.status(200).json(types);
+    } catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+// --- Add new vehicle type ---
+app.post('/api/vehicle-types', async (req, res) => {
+    try {
+        const { name } = req.body;
+        if (!name || !name.trim()) return res.status(400).json({ message: 'Vehicle type name is required.' });
+        const newType = new VehicleType({ name: name.trim() });
+        await newType.save();
+        res.status(201).json({ message: 'Vehicle type added successfully', vehicleType: newType });
+    } catch (error) {
+        if (error.code === 11000) return res.status(400).json({ message: 'This vehicle type already exists.' });
+        res.status(500).json({ message: 'Failed to add vehicle type', error: error.message });
+    }
+});
+
+// --- Delete vehicle type by ID ---
+app.delete('/api/vehicle-types/:id', async (req, res) => {
+    try {
+        await VehicleType.findByIdAndDelete(req.params.id);
+        res.status(200).json({ message: 'Vehicle type deleted successfully' });
+    } catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+// ==========================================
+// STATION ROUTES
+// ==========================================
+
+// --- Get all stations ---
+app.get('/api/stations', async (req, res) => {
+    try {
+        const stations = await Station.find().sort({ createdAt: 1 });
+        res.status(200).json(stations);
+    } catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+// --- Add new station ---
+app.post('/api/stations', async (req, res) => {
+    try {
+        const { name, location, contact } = req.body;
+        if (!name || !name.trim()) return res.status(400).json({ message: 'Station name is required.' });
+        const newStation = new Station({ name: name.trim(), location, contact });
+        await newStation.save();
+        res.status(201).json({ message: 'Station added successfully', station: newStation });
+    } catch (error) {
+        if (error.code === 11000) return res.status(400).json({ message: 'This station already exists.' });
+        res.status(500).json({ message: 'Failed to add station', error: error.message });
+    }
+});
+
+// --- Update station by ID ---
+app.put('/api/stations/:id', async (req, res) => {
+    try {
+        const updated = await Station.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!updated) return res.status(404).json({ message: 'Station not found.' });
+        res.status(200).json({ message: 'Station updated successfully', station: updated });
+    } catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+// --- Delete station by ID ---
+app.delete('/api/stations/:id', async (req, res) => {
+    try {
+        await Station.findByIdAndDelete(req.params.id);
+        res.status(200).json({ message: 'Station deleted successfully' });
+    } catch (error) { res.status(500).json({ error: error.message }); }
+});
 
 // ==========================================
 // FUEL TYPE ROUTES
@@ -79,6 +175,20 @@ app.delete('/api/fuel-types/:id', async (req, res) => {
         await FuelType.findByIdAndDelete(req.params.id);
         res.status(200).json({ message: 'Fuel type deleted successfully' });
     } catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+// --- Update fuel type by ID ---
+app.put('/api/fuel-types/:id', async (req, res) => {
+    try {
+        const { name } = req.body;
+        if (!name || !name.trim()) return res.status(400).json({ message: 'Fuel type name is required.' });
+        const updated = await FuelType.findByIdAndUpdate(req.params.id, { name: name.trim() }, { new: true });
+        if (!updated) return res.status(404).json({ message: 'Fuel type not found.' });
+        res.status(200).json({ message: 'Fuel type updated successfully', fuelType: updated });
+    } catch (error) {
+        if (error.code === 11000) return res.status(400).json({ message: 'This fuel type already exists.' });
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // ==========================================

@@ -10,15 +10,9 @@
         .navbar-dark-custom { background-color: #1a252f; }
         .brand-badge { background-color: #0d6efd; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.9rem; }
         .card { border-radius: 8px; border: 1px solid #e3e6f0; }
-
-        /* Left panel — Add Fuel Type */
-        .add-panel .card-header { background: #1a252f; color: #fff; border-radius: 8px 8px 0 0; }
-
-        /* Right panel — Available Fuel Types table */
-        .list-panel .card-header { background: #1a252f; color: #fff; border-radius: 8px 8px 0 0; }
+        .card-header-dark { background: #1a252f; color: #fff; border-radius: 8px 8px 0 0; }
         .list-panel .table th { background-color: #1a252f; color: white; text-align: center; }
         .list-panel .table td { text-align: center; vertical-align: middle; }
-
         .fuel-badge {
             display: inline-block;
             padding: 4px 14px;
@@ -29,6 +23,8 @@
             color: #0d6efd;
             border: 1px solid #b6cffe;
         }
+        #updateBtn { display: none; }
+        #cancelEditBtn { display: none; }
     </style>
 </head>
 <body>
@@ -52,10 +48,13 @@
                         <a class="nav-link active fw-semibold" aria-current="page" href="fuel-types.html">Fuel Type</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="vehicletypes.html">Vehicle Type</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="#">Quota</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Stations</a>
+                        <a class="nav-link" href="station/station-management.html">Stations</a>
                     </li>
                 </ul>
                 <div class="d-flex">
@@ -75,31 +74,30 @@
 
         <div class="row g-4">
 
-            <!-- LEFT: Add Fuel Type Panel -->
+            <!-- LEFT: Add / Edit Fuel Type Panel -->
             <div class="col-md-4">
-                <div class="card shadow-sm add-panel">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 fw-bold">Add New Fuel Type</h6>
+                <div class="card shadow-sm">
+                    <div class="card-header card-header-dark py-3">
+                        <h6 class="m-0 fw-bold" id="formTitle">Add New Fuel Type</h6>
                     </div>
                     <div class="card-body p-4">
-                        <label class="form-label fw-semibold small mb-1">Fuel Type Name</label>
-                        <div class="input-group">
-                            <input
-                                type="text"
-                                id="fuelTypeInput"
-                                class="form-control"
-                                placeholder="e.g. Petrol 92"
-                                maxlength="50"
-                                autocomplete="off"
-                            >
-                            <button class="btn btn-primary px-3" id="addFuelTypeBtn">
-                                Add
-                            </button>
-                        </div>
-                        <div id="addError" class="text-danger small mt-2 d-none"></div>
-                        <div id="addSuccess" class="text-success small mt-2 d-none"></div>
 
-                        <hr class="my-4">
+                        <input type="hidden" id="editFuelTypeId">
+
+                        <label class="form-label fw-semibold small mb-1">Fuel Type Name</label>
+                        <div class="input-group mb-2">
+                            <input type="text" id="fuelTypeInput" class="form-control"
+                                placeholder="e.g. Petrol 92" maxlength="50" autocomplete="off">
+                            <button class="btn btn-primary px-3" id="addFuelTypeBtn">Add</button>
+                        </div>
+
+                        <button class="btn btn-warning w-100 mb-2" id="updateBtn">Update</button>
+                        <button class="btn btn-secondary w-100 mb-2" id="cancelEditBtn">Cancel</button>
+
+                        <div id="addError" class="text-danger small mt-1 d-none"></div>
+                        <div id="addSuccess" class="text-success small mt-1 d-none"></div>
+
+                        <hr class="my-3">
                         <p class="text-muted small mb-0">
                             Fuel types added here will become available as options when registering a new vehicle on the Dashboard.
                         </p>
@@ -110,7 +108,7 @@
             <!-- RIGHT: Available Fuel Types Table -->
             <div class="col-md-8">
                 <div class="card shadow-sm list-panel">
-                    <div class="card-header d-flex justify-content-between align-items-center py-3">
+                    <div class="card-header card-header-dark d-flex justify-content-between align-items-center py-3">
                         <h6 class="m-0 fw-bold">Available Fuel Types</h6>
                         <button class="btn btn-outline-light btn-sm px-3" id="refreshBtn">↻ Refresh</button>
                     </div>
@@ -120,7 +118,7 @@
                                 <tr>
                                     <th style="width:60px;">#</th>
                                     <th>Fuel Type</th>
-                                    <th style="width:120px;">Action</th>
+                                    <th style="width:160px;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="fuelTypesBody">
@@ -155,14 +153,17 @@
         </div>
     </div>
 
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
     <script>
         const FUEL_API = 'http://localhost:3000/api/fuel-types';
         let deleteTargetId = null;
-        const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        const deleteModal = new bootstrap.Modal($('#deleteModal')[0]);
 
-        // Load all fuel types into the table
+        // ── Load all fuel types into the table ──────────────────────────────
         function loadFuelTypes() {
             $.ajax({
                 url: FUEL_API,
@@ -174,31 +175,32 @@
                         tbody.append('<tr><td colspan="3" class="text-center py-4 text-muted">No fuel types added yet.</td></tr>');
                         return;
                     }
-                    data.forEach(function(ft, i) {
-                        tbody.append(`
-                            <tr>
-                                <td class="fw-bold text-muted">${i + 1}</td>
-                                <td>
-                                    <span class="fuel-badge">${ft.name}</span>
-                                </td>
-                                <td>
-                                    <button class="btn btn-danger btn-sm px-2 py-0 delete-btn"
-                                        data-id="${ft._id}"
-                                        data-name="${ft.name}">
-                                        Delete
-                                    </button>
-                                </td>
-                            </tr>
-                        `);
+                    $.each(data, function(i, ft) {
+                        tbody.append(
+                            '<tr>' +
+                                '<td class="fw-bold text-muted">' + (i + 1) + '</td>' +
+                                '<td><span class="fuel-badge">' + ft.name + '</span></td>' +
+                                '<td>' +
+                                    '<button class="btn btn-warning btn-sm px-2 py-0 me-1 edit-btn" ' +
+                                        'data-id="' + ft._id + '" ' +
+                                        'data-name="' + ft.name + '">Edit</button>' +
+                                    '<button class="btn btn-danger btn-sm px-2 py-0 delete-btn" ' +
+                                        'data-id="' + ft._id + '" ' +
+                                        'data-name="' + ft.name + '">Delete</button>' +
+                                '</td>' +
+                            '</tr>'
+                        );
                     });
                 },
                 error: function() {
-                    $('#fuelTypesBody').html('<tr><td colspan="3" class="text-danger text-center py-3">Failed to load fuel types. Is the server running?</td></tr>');
+                    $('#fuelTypesBody').html(
+                        '<tr><td colspan="3" class="text-danger text-center py-3">Failed to load fuel types. Is the server running?</td></tr>'
+                    );
                 }
             });
         }
 
-        // Add new fuel type
+        // ── Add new fuel type ───────────────────────────────────────────────
         $('#addFuelTypeBtn').on('click', function() {
             const name = $('#fuelTypeInput').val().trim();
             const errEl = $('#addError');
@@ -223,12 +225,11 @@
                     sucEl.text('✔ Fuel type added successfully!').removeClass('d-none');
                     $('#fuelTypeInput').val('');
                     loadFuelTypes();
-                    setTimeout(() => sucEl.addClass('d-none'), 3000);
+                    setTimeout(function() { sucEl.addClass('d-none'); }, 3000);
                 },
                 error: function(xhr) {
                     const msg = (xhr.responseJSON && xhr.responseJSON.message)
-                        ? xhr.responseJSON.message
-                        : 'Failed to add fuel type.';
+                        ? xhr.responseJSON.message : 'Failed to add fuel type.';
                     errEl.text(msg).removeClass('d-none');
                 },
                 complete: function() {
@@ -237,19 +238,92 @@
             });
         });
 
-        // Allow Enter key to submit
-        $('#fuelTypeInput').on('keydown', function(e) {
-            if (e.key === 'Enter') $('#addFuelTypeBtn').trigger('click');
+        // ── Edit button: populate form ──────────────────────────────────────
+        $(document).on('click', '.edit-btn', function() {
+            $('#editFuelTypeId').val($(this).data('id'));
+            $('#fuelTypeInput').val($(this).data('name'));
+            $('#formTitle').text('Edit Fuel Type');
+            $('#addFuelTypeBtn').hide();
+            $('#updateBtn').show();
+            $('#cancelEditBtn').show();
+            $('#addError').addClass('d-none');
+            $('#addSuccess').addClass('d-none');
+            $('html, body').animate({ scrollTop: 0 }, 200);
         });
 
-        // Open delete confirmation modal
+        // ── Update fuel type ────────────────────────────────────────────────
+        $('#updateBtn').on('click', function() {
+            const id   = $('#editFuelTypeId').val();
+            const name = $('#fuelTypeInput').val().trim();
+            const errEl = $('#addError');
+            const sucEl = $('#addSuccess');
+
+            errEl.addClass('d-none');
+            sucEl.addClass('d-none');
+
+            if (!name) {
+                errEl.text('Please enter a fuel type name.').removeClass('d-none');
+                return;
+            }
+
+            $('#updateBtn').prop('disabled', true).text('Updating...');
+
+            $.ajax({
+                url: FUEL_API + '/' + id,
+                method: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({ name: name }),
+                success: function() {
+                    sucEl.text('✔ Fuel type updated successfully!').removeClass('d-none');
+                    resetForm();
+                    loadFuelTypes();
+                    setTimeout(function() { sucEl.addClass('d-none'); }, 3000);
+                },
+                error: function(xhr) {
+                    const msg = (xhr.responseJSON && xhr.responseJSON.message)
+                        ? xhr.responseJSON.message : 'Failed to update fuel type.';
+                    errEl.text(msg).removeClass('d-none');
+                },
+                complete: function() {
+                    $('#updateBtn').prop('disabled', false).text('Update');
+                }
+            });
+        });
+
+        // ── Cancel edit ─────────────────────────────────────────────────────
+        $('#cancelEditBtn').on('click', resetForm);
+
+        // ── Reset form to Add mode ──────────────────────────────────────────
+        function resetForm() {
+            $('#editFuelTypeId').val('');
+            $('#fuelTypeInput').val('');
+            $('#formTitle').text('Add New Fuel Type');
+            $('#addFuelTypeBtn').show();
+            $('#updateBtn').hide();
+            $('#cancelEditBtn').hide();
+            $('#addError').addClass('d-none');
+            $('#addSuccess').addClass('d-none');
+        }
+
+        // ── Enter key triggers Add (only in add mode) ───────────────────────
+        $('#fuelTypeInput').on('keydown', function(e) {
+            if (e.key === 'Enter') {
+                if ($('#updateBtn').is(':visible')) {
+                    $('#updateBtn').trigger('click');
+                } else {
+                    $('#addFuelTypeBtn').trigger('click');
+                }
+            }
+        });
+
+        // ── Open delete confirmation modal ──────────────────────────────────
         $(document).on('click', '.delete-btn', function() {
             deleteTargetId = $(this).data('id');
             $('#deleteTypeName').text($(this).data('name'));
             deleteModal.show();
         });
 
-        // Confirm delete
+        // ── Confirm delete ──────────────────────────────────────────────────
         $('#confirmDeleteBtn').on('click', function() {
             if (!deleteTargetId) return;
             $.ajax({
@@ -265,11 +339,13 @@
             });
         });
 
-        // Refresh button
+        // ── Refresh button ──────────────────────────────────────────────────
         $('#refreshBtn').on('click', loadFuelTypes);
 
-        // Initial load
-        loadFuelTypes();
+        // ── Initial load on DOM ready ───────────────────────────────────────
+        $(document).ready(function() {
+            loadFuelTypes();
+        });
     </script>
 </body>
 </html>

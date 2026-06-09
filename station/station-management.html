@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Station Management - Fuel QR Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .navbar-dark-custom { background-color: #1a252f; }
+        .brand-badge { background-color: #0d6efd; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.9rem; }
+        .card { border-radius: 8px; border: 1px solid #e3e6f0; }
+        .card-header-dark { background: #1a252f; color: #fff; border-radius: 8px 8px 0 0; }
+        .table th { background-color: #1a252f; color: white; text-align: center; }
+        .table td { text-align: center; vertical-align: middle; }
+        #updateBtn { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-dark-custom shadow-sm py-2">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="../index.html">
+                <span class="brand-badge">QR</span> Fuel Portal
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNavbar"
+                aria-controls="topNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="topNavbar">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-3 gap-2">
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="../index.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="../fuel-types.html">Fuel Type</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Quota</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active fw-semibold" aria-current="page" href="#">Stations</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <a href="../login.html" class="btn btn-outline-danger btn-sm px-3 text-white border-danger"
+                        style="background-color: rgba(220, 53, 69, 0.1);">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Content -->
+    <div class="container my-5">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">⛽ Station Management</h2>
+            <p class="text-muted small">Add and manage fuel stations available in the system.</p>
+        </div>
+
+        <div class="row g-4">
+
+            <!-- LEFT: Add / Edit Station Panel -->
+            <div class="col-md-4">
+                <div class="card shadow-sm">
+                    <div class="card-header card-header-dark py-3">
+                        <h6 class="m-0 fw-bold" id="formTitle">Add New Station</h6>
+                    </div>
+                    <div class="card-body p-4">
+
+                        <input type="hidden" id="stationId">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Station Name</label>
+                            <input type="text" class="form-control" id="stationName" placeholder="e.g. Colombo Fuel Station">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Location</label>
+                            <input type="text" class="form-control" id="stationLocation" placeholder="e.g. Colombo">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Contact Number</label>
+                            <input type="text" class="form-control" id="stationContact" placeholder="e.g. 0712345678">
+                        </div>
+
+                        <div id="formError" class="text-danger small mb-2 d-none"></div>
+                        <div id="formSuccess" class="text-success small mb-2 d-none"></div>
+
+                        <button class="btn btn-primary w-100 mb-2" id="saveBtn">Save Station</button>
+                        <button class="btn btn-warning w-100 mb-2" id="updateBtn">Update Station</button>
+                        <button class="btn btn-secondary w-100" id="cancelBtn" style="display:none;">Cancel Edit</button>
+
+                        <hr class="my-3">
+                        <p class="text-muted small mb-0">Stations added here will appear as options in the vehicle registration form.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Stations Table -->
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-header card-header-dark d-flex justify-content-between align-items-center py-3">
+                        <h6 class="m-0 fw-bold">Available Stations</h6>
+                        <button class="btn btn-outline-light btn-sm px-3" id="refreshBtn">↻ Refresh</button>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-bordered table-striped align-middle mb-0 small">
+                            <thead>
+                                <tr>
+                                    <th style="width:50px;">#</th>
+                                    <th>Station Name</th>
+                                    <th>Location</th>
+                                    <th>Contact</th>
+                                    <th style="width:140px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stationTableBody">
+                                <tr><td colspan="5" class="text-center py-4 text-muted">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Delete Confirm Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header py-2" style="background:#1a252f;">
+                    <h6 class="modal-title text-white">Confirm Delete</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body py-3 text-center">
+                    Remove station <strong id="deleteStationName"></strong>?
+                </div>
+                <div class="modal-footer py-2">
+                    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-danger btn-sm" id="confirmDeleteBtn">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script>
+        const STATION_API = 'http://localhost:3000/api/stations';
+        let deleteTargetId = null;
+        const deleteModal = new bootstrap.Modal($('#deleteModal')[0]);
+
+        // ── Load all stations into the table ────────────────────────────────
+        function loadStations() {
+            $.ajax({
+                url: STATION_API,
+                method: 'GET',
+                success: function(data) {
+                    const tbody = $('#stationTableBody');
+                    tbody.empty();
+                    if (!data || data.length === 0) {
+                        tbody.append('<tr><td colspan="5" class="text-center py-4 text-muted">No stations added yet.</td></tr>');
+                        return;
+                    }
+                    $.each(data, function(i, s) {
+                        tbody.append(
+                            '<tr>' +
+                                '<td class="fw-bold text-muted">' + (i + 1) + '</td>' +
+                                '<td class="fw-semibold">' + s.name + '</td>' +
+                                '<td>' + (s.location || '<span class="text-muted">—</span>') + '</td>' +
+                                '<td>' + (s.contact || '<span class="text-muted">—</span>') + '</td>' +
+                                '<td>' +
+                                    '<button class="btn btn-warning btn-sm px-2 py-0 me-1 edit-btn" ' +
+                                        'data-id="' + s._id + '" ' +
+                                        'data-name="' + s.name + '" ' +
+                                        'data-location="' + (s.location || '') + '" ' +
+                                        'data-contact="' + (s.contact || '') + '">Edit</button>' +
+                                    '<button class="btn btn-danger btn-sm px-2 py-0 delete-btn" ' +
+                                        'data-id="' + s._id + '" ' +
+                                        'data-name="' + s.name + '">Delete</button>' +
+                                '</td>' +
+                            '</tr>'
+                        );
+                    });
+                },
+                error: function() {
+                    $('#stationTableBody').html('<tr><td colspan="5" class="text-danger text-center py-3">Failed to load stations. Is the server running?</td></tr>');
+                }
+            });
+        }
+
+        // ── Save new station ────────────────────────────────────────────────
+        $('#saveBtn').on('click', function() {
+            const name     = $('#stationName').val().trim();
+            const location = $('#stationLocation').val().trim();
+            const contact  = $('#stationContact').val().trim();
+            const errEl    = $('#formError');
+            const sucEl    = $('#formSuccess');
+
+            errEl.addClass('d-none');
+            sucEl.addClass('d-none');
+
+            if (!name) {
+                errEl.text('Station name is required.').removeClass('d-none');
+                return;
+            }
+
+            $('#saveBtn').prop('disabled', true).text('Saving...');
+
+            $.ajax({
+                url: STATION_API,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ name: name, location: location, contact: contact }),
+                success: function() {
+                    sucEl.text('✔ Station added successfully!').removeClass('d-none');
+                    resetForm();
+                    loadStations();
+                    setTimeout(function() { sucEl.addClass('d-none'); }, 3000);
+                },
+                error: function(xhr) {
+                    const msg = (xhr.responseJSON && xhr.responseJSON.message)
+                        ? xhr.responseJSON.message : 'Failed to add station.';
+                    errEl.text(msg).removeClass('d-none');
+                },
+                complete: function() {
+                    $('#saveBtn').prop('disabled', false).text('Save Station');
+                }
+            });
+        });
+
+        // ── Update station ──────────────────────────────────────────────────
+        $('#updateBtn').on('click', function() {
+            const id       = $('#stationId').val();
+            const name     = $('#stationName').val().trim();
+            const location = $('#stationLocation').val().trim();
+            const contact  = $('#stationContact').val().trim();
+            const errEl    = $('#formError');
+            const sucEl    = $('#formSuccess');
+
+            errEl.addClass('d-none');
+            sucEl.addClass('d-none');
+
+            if (!name) {
+                errEl.text('Station name is required.').removeClass('d-none');
+                return;
+            }
+
+            $('#updateBtn').prop('disabled', true).text('Updating...');
+
+            $.ajax({
+                url: STATION_API + '/' + id,
+                method: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({ name: name, location: location, contact: contact }),
+                success: function() {
+                    sucEl.text('✔ Station updated successfully!').removeClass('d-none');
+                    resetForm();
+                    loadStations();
+                    setTimeout(function() { sucEl.addClass('d-none'); }, 3000);
+                },
+                error: function(xhr) {
+                    const msg = (xhr.responseJSON && xhr.responseJSON.message)
+                        ? xhr.responseJSON.message : 'Failed to update station.';
+                    errEl.text(msg).removeClass('d-none');
+                },
+                complete: function() {
+                    $('#updateBtn').prop('disabled', false).text('Update Station');
+                }
+            });
+        });
+
+        // ── Edit button: populate form ──────────────────────────────────────
+        $(document).on('click', '.edit-btn', function() {
+            $('#stationId').val($(this).data('id'));
+            $('#stationName').val($(this).data('name'));
+            $('#stationLocation').val($(this).data('location'));
+            $('#stationContact').val($(this).data('contact'));
+            $('#formTitle').text('Edit Station');
+            $('#saveBtn').hide();
+            $('#updateBtn').show();
+            $('#cancelBtn').show();
+            $('html, body').animate({ scrollTop: 0 }, 300);
+        });
+
+        // ── Cancel edit ─────────────────────────────────────────────────────
+        $('#cancelBtn').on('click', resetForm);
+
+        // ── Reset form to Add mode ──────────────────────────────────────────
+        function resetForm() {
+            $('#stationId').val('');
+            $('#stationName').val('');
+            $('#stationLocation').val('');
+            $('#stationContact').val('');
+            $('#formTitle').text('Add New Station');
+            $('#saveBtn').show();
+            $('#updateBtn').hide();
+            $('#cancelBtn').hide();
+            $('#formError').addClass('d-none');
+            $('#formSuccess').addClass('d-none');
+        }
+
+        // ── Open delete modal ───────────────────────────────────────────────
+        $(document).on('click', '.delete-btn', function() {
+            deleteTargetId = $(this).data('id');
+            $('#deleteStationName').text($(this).data('name'));
+            deleteModal.show();
+        });
+
+        // ── Confirm delete ──────────────────────────────────────────────────
+        $('#confirmDeleteBtn').on('click', function() {
+            if (!deleteTargetId) return;
+            $.ajax({
+                url: STATION_API + '/' + deleteTargetId,
+                method: 'DELETE',
+                success: function() {
+                    deleteModal.hide();
+                    loadStations();
+                },
+                error: function() {
+                    alert('Delete failed. Try again.');
+                }
+            });
+        });
+
+        // ── Refresh ─────────────────────────────────────────────────────────
+        $('#refreshBtn').on('click', loadStations);
+
+        // ── Initial load ────────────────────────────────────────────────────
+        $(document).ready(function() {
+            loadStations();
+        });
+    </script>
+</body>
+</html>
