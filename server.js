@@ -23,9 +23,10 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model('User', userSchema);
 
-// ==========================================
+// ..........................................
 // VEHICLE TYPE DATABASE COLLECTION SCHEMA
-// ==========================================
+// @ COPYRIGHT - AMAYA
+// ..........................................
 const vehicleTypeSchema = new mongoose.Schema({
     name: { type: String, required: true, unique: true, trim: true }
 }, { timestamps: true });
@@ -33,6 +34,7 @@ const VehicleType = mongoose.model('VehicleType', vehicleTypeSchema);
 
 // ==========================================
 // STATION DATABASE COLLECTION SCHEMA
+// @ COPYRIGHT - SUVINI
 // ==========================================
 const stationSchema = new mongoose.Schema({
     name:     { type: String, required: true, unique: true, trim: true },
@@ -41,9 +43,10 @@ const stationSchema = new mongoose.Schema({
 }, { timestamps: true });
 const Station = mongoose.model('Station', stationSchema);
 
-// ==========================================
+// ..........................................
 // FUEL TYPE DATABASE COLLECTION SCHEMA
-// ==========================================
+// @ COPYRIGHT - HASITHA
+// ..........................................
 const fuelTypeSchema = new mongoose.Schema({
     name: { type: String, required: true, unique: true, trim: true }
 }, { timestamps: true });
@@ -66,9 +69,10 @@ const vehicleSchema = new mongoose.Schema({
 });
 const Vehicle = mongoose.model('Vehicle', vehicleSchema);
 
-// ==========================================
+// ..........................................
 // VEHICLE TYPE ROUTES
-// ==========================================
+// @ COPYRIGHT - AMAYA
+// ..........................................
 
 // --- Get all vehicle types ---
 app.get('/api/vehicle-types', async (req, res) => {
@@ -99,9 +103,11 @@ app.delete('/api/vehicle-types/:id', async (req, res) => {
         res.status(200).json({ message: 'Vehicle type deleted successfully' });
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
+// END VEHICLE TYPE SECTION (@ COPYRIGHT - AMAYA) ............
 
 // ==========================================
 // STATION ROUTES
+// @ COPYRIGHT - SUVINI
 // ==========================================
 
 // --- Get all stations ---
@@ -142,10 +148,12 @@ app.delete('/api/stations/:id', async (req, res) => {
         res.status(200).json({ message: 'Station deleted successfully' });
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
+// END STATION SECTION (@ COPYRIGHT - SUVINI) ............
 
-// ==========================================
+// ..........................................
 // FUEL TYPE ROUTES
-// ==========================================
+// @ COPYRIGHT - HASITHA
+// ..........................................
 
 // --- Get all fuel types ---
 app.get('/api/fuel-types', async (req, res) => {
@@ -190,6 +198,7 @@ app.put('/api/fuel-types/:id', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+// END FUEL TYPE SECTION (@ COPYRIGHT - HASITHA) ............
 
 // ==========================================
 // AUTHENTICATION ROUTES
