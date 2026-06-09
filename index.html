@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fuel QR Registration System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { border-radius: 8px; border: 1px solid #e3e6f0; }
+        .table th { background-color: #1a252f; color: white; text-align: center; }
+        .table td { text-align: center; }
+
+        .navbar-dark-custom { background-color: #1a252f; }
+        .brand-badge { background-color: #0d6efd; color: white; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+        <nav class="navbar navbar-expand-lg navbar-dark navbar-dark-custom shadow-sm py-2">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center gap-2 fw-bold" href="#">
+                <span class="brand-badge">QR</span> Fuel Portal
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNavbar" aria-controls="topNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="topNavbar">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-3 gap-2">
+                    <li class="nav-item">
+                        <a class="nav-link active fw-semibold" aria-current="page" href="#">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="fuel-types.html">Fuel Type</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Quota</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Stations</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <a href="login.html" class="btn btn-outline-danger btn-sm px-3 text-white border-danger" style="background-color: rgba(220, 53, 69, 0.1);">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <div class="flex-grow-1 text-center">
+                <h2 class="m-0 ps-5">Fuel QR Registration System</h2>
+            </div>
+            
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card p-4 shadow-sm bg-white">
+                    <h5 class="mb-3" id="formTitle">Register New Vehicle</h5>
+                    <form id="vehicleForm">
+                        <div class="mb-3">
+                            <input type="text" id="regNo" class="form-control" placeholder="Reg No (e.g. ABC-1234)" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="text" id="firstName" class="form-control" placeholder="First Name">
+                        </div>
+                        <div class="mb-3">
+                            <input type="text" id="lastName" class="form-control" placeholder="Last Name">
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" id="vehEmail" class="form-control" placeholder="Email">
+                        </div>
+                        <div class="mb-3">
+                            <input type="text" id="station" class="form-control" placeholder="Nearest Station">
+                        </div>
+                        <div class="mb-3">
+                            <select id="fuelType" class="form-select">
+                                <option value="" disabled selected>Loading fuel types...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <input type="text" id="ownerNIC" class="form-control" placeholder="Owner NIC">
+                        </div>
+                        <div class="mb-3">
+                            <input type="text" id="vehicleModel" class="form-control" placeholder="Vehicle Model (e.g. Toyota Vitz)">
+                        </div>
+                        <button type="submit" id="submitBtn" class="btn btn-primary w-100">Register Vehicle</button>
+                        <button type="button" id="cancelBtn" class="btn btn-secondary w-100 mt-2 d-none" onclick="resetFormState()">Cancel Edit</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card p-3 mb-4 shadow-sm bg-white">
+                    <label class="form-label fw-bold small mb-2">Search Database:</label>
+                    <div class="input-group">
+                        <select id="searchType" class="form-select" style="max-width: 160px;">
+                            <option value="firstname">First Name</option>
+                            <option value="lastname">Last Name</option>
+                            <option value="regno">Reg No</option>
+                            <option value="email">Email</option>
+                            <option value="station">Station</option>
+                            <option value="fuel">Fuel Type</option>
+                            <option value="nic">Owner NIC</option>
+                        </select>
+                        <input type="text" id="searchQuery" class="form-control" placeholder="Search...">
+                        <button class="btn btn-success px-4" onclick="searchDatabase()">Search</button>
+                        <button class="btn btn-outline-secondary" onclick="fetchVehicles()">Clear</button>
+                    </div>
+                </div>
+
+                <div class="card p-3 shadow-sm bg-white">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="m-0">Registered Vehicles</h5>
+                        <button class="btn btn-secondary btn-sm" id="refreshBtn" onclick="fetchVehicles()">Refresh List</button>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped align-middle small">
+                            <thead>
+                                <tr>
+                                    <th>Reg No</th>
+                                    <th>Owner Name</th>
+                                    <th>Model</th>
+                                    <th>Fuel</th>
+                                    <th>Station</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="vehicleTableBody">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- .............................................................
+         Admin Quota Dashboard Section
+         integrated into the main registration system by Manushan.
+         ........................................................... -->
+
+
+    <style>
+        /* Admin quota table section */
+        #adminSection .card-header { background: #1a1a2e; color: #fff; }
+        #adminSection .badge-remaining { font-size: 0.82rem; }
+        #adminSection #last-updated { font-size: 0.75rem; color: #888; }
+        #adminSection .table th { background-color: #1a1a2e; color: white; text-align: center; }
+        #adminSection .table td { text-align: center; vertical-align: middle; }
+        #adminSection table { font-size: 0.82rem; }
+    </style>
+
+  
+    <div class="container mb-5" id="adminSection">
+        <hr class="my-4">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>⛽ Fuel Quota</strong>
+                <div class="d-flex align-items-center gap-3">
+                    <span id="last-updated" style="font-size:0.75rem;color:#aaa;">Loading...</span>
+                    <span class="badge bg-success" id="live-badge" style="font-size:0.75rem;">🔄</span>
+                    <button class="btn btn-success btn-sm px-3" onclick="openAddQuotaModal('', '')">
+                        ＋ Add Vehicle Quota
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-bordered table-hover mb-0" id="quota-table">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Registration Number</th>
+                            <th>Nearest Fuel Station</th>
+                            <th>Max Quota (L)</th>
+                            <th>Used (L)</th>
+                            <th>Remaining (L)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="quota-body">
+                        <tr><td colspan="5" class="text-center py-3">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ................................................................
+         Add Vehicle Quota Modal
+         POSTs to separate Quota MongoDB (i use atlas Don't worry  )
+         ............................................................ -->
+    <div class="modal fade" id="addQuotaModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header py-2" style="background:#1a252f;">
+                    <h6 class="modal-title text-white">Add Vehicle Quota</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body py-3 px-3">
+                    <div class="mb-2">
+                        <label class="form-label small mb-1 fw-bold">Registration No</label>
+                        <input type="text" id="quota-reg-input" class="form-control form-control-sm fw-bold" placeholder="e.g. ABC-1234">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small mb-1 fw-bold">Nearest Fuel Station</label>
+                        <input type="text" id="quota-station-input" class="form-control form-control-sm" placeholder="Nearest Station">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label small mb-1 fw-bold">Quota Limit (L)</label>
+                        <input type="number" id="quota-limit-input" class="form-control form-control-sm" placeholder="e.g. 40" min="1">
+                    </div>
+                    <div id="quota-add-error" class="text-danger small mt-1 d-none"></div>
+                    <div id="quota-add-success" class="text-success small mt-1 d-none"></div>
+                </div>
+                <div class="modal-footer py-2">
+                    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-success btn-sm" id="submit-quota-btn">✔ Submit Quota</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- END Add Quota Modal (@ COPYRIGHT - MANUSHAN).................................... -->
+
+    <!-- Edit Quota Modal (@ COPYRIGHT - MANUSHAN) .......................... -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title">Update Quota Limit</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">Vehicle: <strong id="modal-reg"></strong></p>
+                    <input type="number" id="modal-quota-input" class="form-control" placeholder="New max quota (L)" min="1">
+                    <div id="modal-error" class="text-danger mt-2 d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary btn-sm" id="save-quota-btn">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- END Quota Section (@ COPYRIGHT - MANUSHAN) .............-->
+	
+	// me thiyenne ube code eka
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery  -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <script>
+        const API_BASE = "http://localhost:3000/api/vehicles";  // local Mongo DB .
+        let isEditMode = false;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            fetchVehicles();
+            loadFuelTypeOptions();
+        });
+
+        // Populate the Fuel Type dropdown from the fuel-types API
+        async function loadFuelTypeOptions(selectedValue = null) {
+            try {
+                const res = await fetch('http://localhost:3000/api/fuel-types');
+                const data = await res.json();
+                const select = document.getElementById('fuelType');
+                select.innerHTML = '';
+
+                if (!data || data.length === 0) {
+                    select.innerHTML = '<option value="" disabled selected>No fuel types available</option>';
+                    return;
+                }
+
+                data.forEach(ft => {
+                    const opt = document.createElement('option');
+                    opt.value = ft.name;
+                    opt.textContent = ft.name;
+                    if (selectedValue && ft.name === selectedValue) opt.selected = true;
+                    select.appendChild(opt);
+                });
+
+                // Keep the previously selected value when entering edit mode
+                if (selectedValue) select.value = selectedValue;
+            } catch (err) {
+                console.error('Failed to load fuel types:', err);
+                document.getElementById('fuelType').innerHTML = '<option value="" disabled selected>Failed to load</option>';
+            }
+        }
+
+        // GET all records
+        async function fetchVehicles() {
+            document.getElementById("searchQuery").value = "";
+            try {
+                const res = await fetch(API_BASE);
+                const data = await res.json();
+                renderTable(data);
+            } catch (err) { console.error("Database connection issue:", err); }
+        }
+
+        // Render Database Records inside Table Cells
+        function renderTable(vehicles) {
+            const tbody = document.getElementById("vehicleTableBody");
+            tbody.innerHTML = "";
+            
+            const list = Array.isArray(vehicles) ? vehicles : [vehicles];
+
+            if(list.length === 0 || !list[0]) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-muted text-center py-3">No records found</td></tr>`;
+                return;
+            }
+
+            list.forEach(v => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="fw-bold">${v.RegNo}</td>
+                        <td>${v.FirstName || ''} ${v.LastName || ''}</td>
+                        <td>${v.VehicleModel || ''}</td>
+                        <td><span class="badge bg-secondary">${v.FuelType || ''}</span></td>
+                        <td>${v.NearestStation || ''}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm px-2 py-0 me-1" onclick="editVehicle('${v.RegNo}', '${v.FirstName || ''}', '${v.LastName || ''}', '${v.Email || ''}', '${v.NearestStation || ''}', '${v.FuelType}', '${v.OwnerNIC || ''}', '${v.VehicleModel || ''}')">Edit</button>
+                            <button class="btn btn-danger btn-sm px-2 py-0 me-1" onclick="deleteVehicle('${v.RegNo}')">Delete</button>
+                            <button class="btn btn-success btn-sm px-2 py-0" onclick="openAddQuotaModal('${v.RegNo}', '${v.NearestStation || ''}')">+ Quota</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // POST / PUT Save Actions
+        document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            
+            const payload = {
+                RegNo: document.getElementById("regNo").value,
+                FirstName: document.getElementById("firstName").value,
+                LastName: document.getElementById("lastName").value,
+                Email: document.getElementById("vehEmail").value,
+                NearestStation: document.getElementById("station").value,
+                FuelType: document.getElementById("fuelType").value,
+                OwnerNIC: document.getElementById("ownerNIC").value,
+                VehicleModel: document.getElementById("vehicleModel").value
+            };
+
+            const url = isEditMode ? `${API_BASE}/regno/${payload.RegNo}` : API_BASE;
+            const method = isEditMode ? "PUT" : "POST";
+
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                alert(data.message);
+                resetFormState();
+                fetchVehicles();
+            } catch (err) { console.error(err); }
+        });
+
+        // Trigger Edit Configuration State
+        function editVehicle(regNo, first, last, email, station, fuel, nic, model) {
+            isEditMode = true;
+            document.getElementById("formTitle").textContent = "Update Vehicle Info";
+            document.getElementById("regNo").value = regNo;
+            document.getElementById("regNo").setAttribute("disabled", true);
+            document.getElementById("firstName").value = first;
+            document.getElementById("lastName").value = last;
+            document.getElementById("vehEmail").value = email;
+            document.getElementById("station").value = station;
+            loadFuelTypeOptions(fuel);  // reload dropdown and pre-select the current fuel type
+            document.getElementById("ownerNIC").value = nic;
+            document.getElementById("vehicleModel").value = model;
+            
+            document.getElementById("submitBtn").textContent = "Save Changes";
+            document.getElementById("submitBtn").className = "btn btn-warning w-100";
+            document.getElementById("cancelBtn").classList.remove("d-none");
+        }
+
+        // Delete Request Mapping
+        async function deleteVehicle(regNo) {
+            if (!confirm(`Delete records for ${regNo}?`)) return;
+            try {
+                const res = await fetch(`${API_BASE}/regno/${regNo}`, { method: "DELETE" });
+                const data = await res.json();
+                alert(data.message);
+                fetchVehicles();
+            } catch (err) { console.error(err); }
+        }
+
+        // Active Order-By Search Evaluation Dropdown Core Route Parser
+        async function searchDatabase() {
+            const type = document.getElementById("searchType").value; 
+            const query = document.getElementById("searchQuery").value.trim();
+            if (!query) return fetchVehicles();
+
+            try {
+                const res = await fetch(`${API_BASE}/${type}/${query}`);
+                if (res.status === 404) {
+                    alert("No matching records found.");
+                    return;
+                }
+                const data = await res.json();
+                renderTable(data);
+            } catch (err) { console.error(err); }
+        }
+
+        // Form Normalization
+        function resetFormState() {
+            isEditMode = false;
+            document.getElementById("vehicleForm").reset();
+            document.getElementById("formTitle").textContent = "Register New Vehicle";
+            document.getElementById("regNo").removeAttribute("disabled");
+            document.getElementById("submitBtn").textContent = "Register Vehicle";
+            document.getElementById("submitBtn").className = "btn btn-primary w-100";
+            document.getElementById("cancelBtn").classList.add("d-none");
+        }
+
+
+
+
+        // Post / Update controller
+document.getElementById("vehicleForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    
+    const regNoValue = document.getElementById("regNo").value.trim().toUpperCase();
+
+    const payload = {
+        RegNo: regNoValue,
+        FirstName: document.getElementById("firstName").value,
+        LastName: document.getElementById("lastName").value,
+        Email: document.getElementById("vehEmail").value,
+        NearestStation: document.getElementById("station").value,
+        FuelType: document.getElementById("fuelType").value,
+        OwnerNIC: document.getElementById("ownerNIC").value,
+        VehicleModel: document.getElementById("vehicleModel").value,
+        // AUTOMATIC GENERATION: Creates the QR tracking token string automatically
+        QRCode: `FUEL-QR-${regNoValue}` 
+    };
+
+    const url = isEditMode ? `${API_BASE}/regno/${payload.RegNo}` : API_BASE;
+    const method = isEditMode ? "PUT" : "POST";
+
+    try {
+        const res = await fetch(url, {
+            method: method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        alert("Vehicle Processed & QR Payload Generated Successfully!");
+        resetFormState();
+        fetchVehicles();
+    } catch (err) { console.error(err); }
+});
+
+
+
+    </script>
+
+    <!-- ........................................................
+         @ COPYRIGHT - MANUSHAN
+         Quota Dashboard  
+         ...................................................... -->
+    <script>
+        // Admin Quota API endpoint 
+        const QUOTA_API = 'https://fuelsys-production-c68b.up.railway.app/api'; //api update soon Dont'worry 
+        let editId = null;
+        const editModal = new bootstrap.Modal('#editModal');
+
+        // Load quota records from backend
+        function loadQuotas() {
+            $.ajax({
+                url: QUOTA_API + '/quotas',
+                method: 'GET',
+                success: function(data) {
+                    const tbody = $('#quota-body');
+                    tbody.empty();
+                    if (data.length === 0) {
+                        tbody.append('<tr><td colspan="6" class="text-center">No records found</td></tr>');
+                        return;
+                    }
+                    data.forEach(function(v) {
+                        const remaining = v.max_quota - v.used;
+                        const badgeClass = remaining === 0 ? 'bg-danger' : remaining < 5 ? 'bg-warning text-dark' : 'bg-success';
+                        tbody.append(`
+                            <tr>
+                                <td><strong>${v.reg_number}</strong></td>
+                                <td>${v.nearest_station || '<span class="text-muted">—</span>'}</td>
+                                <td>${v.max_quota} L</td>
+                                <td>${v.used} L</td>
+                                <td><span class="badge ${badgeClass} badge-remaining">${remaining.toFixed(1)} L</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary edit-btn"
+                                        data-id="${v._id}"
+                                        data-reg="${v.reg_number}"
+                                        data-quota="${v.max_quota}">
+                                        Edit Quota
+                                    </button>
+                                </td>
+                            </tr>
+                        `);
+                    });
+                    $('#last-updated').text('Last updated: ' + new Date().toLocaleTimeString());
+                },
+                error: function() {
+                    $('#quota-body').html('<tr><td colspan="6" class="text-danger text-center">Failed to load data. Is the server running?</td></tr>');
+                }
+            });
+        }
+
+        // Open edit modal on Edit Quota click
+        $(document).on('click', '.edit-btn', function() {
+            editId = $(this).data('id');
+            $('#modal-reg').text($(this).data('reg'));
+            $('#modal-quota-input').val($(this).data('quota'));
+            $('#modal-error').addClass('d-none').text('');
+            editModal.show();
+        });
+
+        // Save updated quota value
+        $('#save-quota-btn').on('click', function() {
+            const newQuota = parseInt($('#modal-quota-input').val());
+            if (!newQuota || newQuota < 1) {
+                $('#modal-error').removeClass('d-none').text('Please enter a valid quota value.');
+                return;
+            }
+            $.ajax({
+                url: QUOTA_API + '/quotas/' + editId,
+                method: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({ max_quota: newQuota }),
+                success: function() {
+                    editModal.hide();
+                    loadQuotas();
+                },
+                error: function() {
+                    $('#modal-error').removeClass('d-none').text('Update failed. Try again.');
+                }
+            });
+        });
+
+        // Open Add Quota Modal
+        
+       
+        function openAddQuotaModal(regNo, station) {
+            const regInput     = document.getElementById('quota-reg-input');
+            const stationInput = document.getElementById('quota-station-input');
+
+            regInput.value     = regNo || '';
+            stationInput.value = station || '';
+            document.getElementById('quota-limit-input').value = '';
+            document.getElementById('quota-add-error').classList.add('d-none');
+            document.getElementById('quota-add-success').classList.add('d-none');
+
+            if (regNo) {
+                // Called from vehicle row 
+                regInput.setAttribute('readonly', true);
+                regInput.classList.add('bg-light');
+                stationInput.setAttribute('readonly', true);
+                stationInput.classList.add('bg-light');
+            } else {
+                // Called from dashboard header 
+                regInput.removeAttribute('readonly');
+                regInput.classList.remove('bg-light');
+                stationInput.removeAttribute('readonly');
+                stationInput.classList.remove('bg-light');
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('addQuotaModal'));
+            modal.show();
+        }
+
+        // Submit new quota to QUOTA_API 
+       document.getElementById('submit-quota-btn').addEventListener('click', function() {
+    const regNo = document.getElementById('quota-reg-input').value.trim();
+    const station = document.getElementById('quota-station-input').value.trim();
+    const limit = parseInt(document.getElementById('quota-limit-input').value);
+    const errEl = document.getElementById('quota-add-error');
+    const sucEl = document.getElementById('quota-add-success');
+
+    errEl.classList.add('d-none');
+    sucEl.classList.add('d-none');
+
+    if (!regNo) { errEl.textContent = 'Registration number is missing.'; errEl.classList.remove('d-none'); return; }
+    if (!limit || limit < 1) { errEl.textContent = 'Please enter a valid quota limit.'; errEl.classList.remove('d-none'); return; }
+
+    $.ajax({
+        url: QUOTA_API + '/quotas',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ reg_number: regNo, nearest_station: station, max_quota: limit, used: 0 }),
+        success: function() {
+            sucEl.textContent = '✔ Quota added successfully!';
+            sucEl.classList.remove('d-none');
+            setTimeout(function() {
+                bootstrap.Modal.getInstance(document.getElementById('addQuotaModal')).hide();
+                loadQuotas();
+            }, 1200);
+        },
+        error: function(xhr) {
+            // Log the real cause to the console for debugging
+            console.error('Quota submit failed →', xhr.status, xhr.responseText);
+            const msg = (xhr.responseJSON && xhr.responseJSON.message)
+                ? xhr.responseJSON.message
+                : `Failed to add quota (status ${xhr.status}). Check console for details.`;
+            errEl.textContent = msg;
+            errEl.classList.remove('d-none');
+        }
+    });
+});
+        // Load immediately, then auto-refresh every 3 seconds (live updates)
+        loadQuotas();
+        setInterval(loadQuotas, 3000);
+    </script>
+    <!-- END Admin Quota JS (@ COPYRIGHT - MANUSHAN)................................................. -->
+
+</body>
+</html>

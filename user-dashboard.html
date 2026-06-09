@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard - Fuel QR System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body { background-color: #f8f9fa; min-height: 100vh; display: flex; flex-direction: column; }
+        .card { border-radius: 12px; border: none; max-width: 500px; width: 100%; }
+        #qrcode img { margin: 0 auto; display: block; border: 4px solid white; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <span class="navbar-brand mb-0 h1">Fuel QR Member Portal</span>
+            <button class="btn btn-outline-danger btn-sm px-3" onclick="logoutUser()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container my-auto d-flex justify-content-center align-items-center">
+        <div class="w-100 d-flex flex-column align-items-center">
+            
+            <div class="text-center mb-4">
+                <h2 class="fw-bold text-dark">Welcome Back!</h2>
+                <p class="text-muted" id="userGreeting">Syncing credentials...</p>
+            </div>
+
+            <div class="card shadow p-4 bg-white text-center">
+                
+                <div id="loadingState" class="py-5">
+                    <div class="spinner-border text-success" role="status"></div>
+                    <p class="text-muted mt-2 mb-0">Connecting to secure fuel grid...</p>
+                </div>
+
+                <div id="dashboardContent" class="d-none">
+                    <h6 class="text-muted text-uppercase small mb-1">Your Assigned Vehicle</h6>
+                    <h1 class="display-6 fw-bold text-dark mb-4" id="displayRegNo">---</h1>
+                    
+                    <div class="bg-light rounded p-3 mb-4 text-start small">
+                        <div class="row">
+                            <div class="col-6 mb-2"><strong>Owner:</strong> <span id="lblOwner">--</span></div>
+                            <div class="col-6 mb-2"><strong>Model:</strong> <span id="lblModel">--</span></div>
+                            <div class="col-6"><strong>Fuel Type:</strong> <span id="lblFuel" class="badge bg-dark">--</span></div>
+                            <div class="col-6"><strong>Station:</strong> <span id="lblStation">--</span></div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-white border d-inline-block rounded mb-2">
+                        <div id="qrcode"></div>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0">Show this QR code at the station to claim your fuel quota.</p>
+                </div>
+
+                <div id="errorState" class="d-none py-4">
+                    <div class="alert alert-warning border-0 p-3 mb-0">
+                        <h6 class="fw-bold text-dark mb-1">Vehicle Match Pending</h6>
+                        <p class="small text-secondary mb-0">We found your account profile, but the admin panel hasn't linked your name or email to a specific vehicle registration yet.</p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Get the real logged-in credential state variables safely
+        const sessionEmail = localStorage.getItem("loggedInEmail") || "";
+        
+        // Extract the prefix name (e.g., "fathima" from "fathima@gmail.com") to use as an alternative search key
+        const sessionNamePrefix = sessionEmail.split('@')[0]; 
+
+        document.addEventListener("DOMContentLoaded", () => {
+            if (!sessionEmail) {
+                window.location.href = "login.html";
+                return;
+            }
+            document.getElementById("userGreeting").innerHTML = `Logged in as: <strong>${sessionEmail}</strong>`;
+            searchUserVehicle();
+        });
+
+        async function searchUserVehicle() {
+            try {
+                // First attempt: Look up using the email address suffix identifier
+                let res = await fetch(`http://localhost:3000/api/vehicles/usersearch/${encodeURIComponent(sessionEmail)}`);
+                
+                // Second attempt fallback: If no match, look up by their name prefix string ("fathima")
+                if (res.status === 404 && sessionNamePrefix) {
+                    res = await fetch(`http://localhost:3000/api/vehicles/usersearch/${encodeURIComponent(sessionNamePrefix)}`);
+                }
+
+                if (!res.ok) {
+                    toggleState("error");
+                    return;
+                }
+
+                const data = await res.json();
+                const vehicle = Array.isArray(data) ? data[0] : data;
+
+                if (!vehicle || !vehicle.RegNo) {
+                    toggleState("error");
+                    return;
+                }
+
+                // Inject vehicle data points safely into UI placeholders
+                document.getElementById("displayRegNo").textContent = vehicle.RegNo.toUpperCase();
+                document.getElementById("lblOwner").textContent = `${vehicle.FirstName || ''} ${vehicle.LastName || ''}`.trim() || 'Assigned';
+                document.getElementById("lblModel").textContent = vehicle.VehicleModel || 'N/A';
+                document.getElementById("lblFuel").textContent = vehicle.FuelType || 'Petrol';
+                document.getElementById("lblStation").textContent = vehicle.NearestStation || 'Any';
+
+                // Render the physical QR code graphic from the generated database data string token
+                document.getElementById("qrcode").innerHTML = "";
+                new QRCode(document.getElementById("qrcode"), {
+                    text: vehicle.QRCode || vehicle.RegNo.toUpperCase(), // Uses generated payload token safely
+                    width: 180,
+                    height: 180,
+                    colorDark : "#000000",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.M
+                });
+
+                toggleState("content");
+
+            } catch (err) {
+                console.error(err);
+                toggleState("error");
+            }
+        }
+
+        function toggleState(state) {
+            document.getElementById("loadingState").classList.add("d-none");
+            document.getElementById("dashboardContent").classList.add("d-none");
+            document.getElementById("errorState").classList.add("d-none");
+
+            if (state === "content") document.getElementById("dashboardContent").classList.remove("d-none");
+            if (state === "error") document.getElementById("errorState").classList.remove("d-none");
+        }
+
+        function logoutUser() {
+            localStorage.clear();
+            window.location.href = "login.html";
+        }
+    </script>
+</body>
+</html>
